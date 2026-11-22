@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "mechanic-logbook-v1";
+const CACHE_NAME = "mechanic-logbook-v2";
 
 const FILES_TO_CACHE = [
   "./",
