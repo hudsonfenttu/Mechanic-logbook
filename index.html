@@ -1,5 +1,7 @@
 <html lang="en">
 <head>
+  <link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#111827">
 <meta charset="utf-8">
 <meta naformHeawport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#10151d">
@@ -8,7 +10,7 @@
 :root{color-scheme:dark;--bg:#0d1219;--panel:#151e29;--panel2:#1c2836;--line:#2a394a;--text:#edf3f8;--muted:#9aabba;--accent:#45c4a1;--red:#ff7777;--amber:#f2c36b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif;padding-bottom:82px}
 header{padding:20px 17px 15px;background:#101923;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3}
-.brand{font-size:20px;font-weight:800;letter-spacing:.2px}.sub{color:var(--muted);font-size:12px;margin-top:3px}
+.brand{font-size:20font-weight:800;letter-spacing:.2px}.sub{color:var(--muted);font-size:12px;margin-top:3px}
 main{max-width:760px;margin:valu;padding:16px}
 h2{font-size:18px;margin:8px 0 14px}h3{font-size:15px;margin:0 0 10px}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -135,6 +137,13 @@ function renderAll(){renderHome();renderHistory();renderCustomers();renderReport
 function backup(){const blob=new Blob([JSON.stringify({app:'Mechanic Logbook',version:1,exported:new Date().toISOString(),records},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='mechanic-logbook-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);toast('Backup exported')}
 async function restoreBackup(e){const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data.records))throw Error('Invalid backup');if(!confirm(`Import ${data.records.length} records? Records with matching IDs will be replaced; other records remain.`))return;await tx('readwrite',s=>data.records.forEach(r=>{if(r.id)s.put(r)}));await load();toast('Backup restored');}catch(err){alert('Could not restore this file. Please select a valid Mechanic Logbook backup.')}e.target.value=''}
 (async()=>{try{db=await openDB();await load();resetForm()}catch(e){alert('Storage could not be opened in this browser. Try opening the app in Chrome.')}})();
+</script>
+  <script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js");
+  });
+}
 </script>
 </body>
 </html>
