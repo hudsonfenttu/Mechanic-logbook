@@ -1,0 +1,140 @@
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta naformHeawport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10151d">
+<title>Mechanic Logbook</title>
+<style>
+:root{color-scheme:dark;--bg:#0d1219;--panel:#151e29;--panel2:#1c2836;--line:#2a394a;--text:#edf3f8;--muted:#9aabba;--accent:#45c4a1;--red:#ff7777;--amber:#f2c36b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif;padding-bottom:82px}
+header{padding:20px 17px 15px;background:#101923;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3}
+.brand{font-size:20px;font-weight:800;letter-spacing:.2px}.sub{color:var(--muted);font-size:12px;margin-top:3px}
+main{max-width:760px;margin:valu;padding:16px}
+h2{font-size:18px;margin:8px 0 14px}h3{font-size:15px;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:14px;margin-bottom:12px}
+.stat{font-size:24px;font-weight:800;margin-top:7px}.muted{color:var(--muted);font-size:12px}.accent{color:var(--accent)}
+nav{position:fixed;bottom:0;left:0;right:0;background:#111a24;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 3px calc(8px + env(safe-area-inset-bottom));z-index:5}
+nav button{background:none;border:0;color:var(--muted);font-size:11px;padding:5px 4px;min-width:58px}nav button span{display:block;font-size:20px;margin-bottom:2px}nav button.active{color:var(--accent)}
+button,.btn{border:0;border-radius:10px;padding:12px 14px;background:var(--accent);color:#071711;font-weight:750;font-size:14px;cursor:pointer}
+button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+button.danger{background:#49252a;color:#ffdede}
+button.small{padding:8px 10px;font-size:12px}
+label{display:block;color:#c3d0dc;font-size:12px;font-weight:650;margin:12px 0 5px}
+input,textarea,select{width:100%;border:1px solid var(--line);background:#0e1620;color:var(--text);padding:12px;border-radius:10px;font:inherit;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{min-height:76px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.hidden{display:none!important}
+.record-title{font-weight:750}.record-meta{color:var(--muted);font-size:12px;margin:4px 0 8px}.money{font-weight:800;color:var(--accent)}
+.pill{display:inline-block;border-radius:99px;padding:4px 8px;font-size:11px;background:#213b36;color:#8de0c6}.pill.unpaid{background:#492e25;color:#ffc28c}
+.empty{text-align:center;padding:30px 12px;color:var(--muted)}
+hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+#toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:#e9fff8;color:#09251d;padding:10px 15px;border-radius:30px;font-weight:700;display:none;z-index:10;box-shadow:0 5px 24px #0008}
+small.hint{display:block;color:var(--muted);font-size:11px;margin-top:5px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.wide{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<header><div class="brand">🔧 Mechanic Logbook</div><div class="sub">Your personal workshop records · MVR</div></header>
+<main>
+<section id="home">
+<h2>Workshop overview</h2>
+<div class="grid">
+<div class="card"><div class="muted">Total jobs</div><div class="stat" id="statJobs">0</div></div>
+<div class="card"><div class="muted">Total recorded income</div><div class="stat accent" id="statIncome">MVR 0</div></div>
+<div class="card"><div class="muted">Unpaid balance</div><div class="stat" id="statUnpaid">MVR 0</div></div>
+<div class="card"><div class="muted">Customers</div><div class="stat" id="statCustomers">0</div></div>
+</div>
+<div class="actions"><button onclick="show('add')">＋ Add service record</button><button class="secondary" onclick="show('history')">View history</button></div>
+<div class="card" style="margin-top:16px"><h3>Recent services</h3><div id="recent"></div></div>
+<div class="card"><h3>Data safety</h3><div class="muted">Records are saved in this browser on this device. Export backups regularly, especially before changing phones or clearing browser data.</div><div class="actions"><button class="secondary small" onclick="backup()">Export backup</button><button class="secondary small" onclick="document.getElementById('restoreFile').click()">Restore backup</button></div></div>
+</section>
+
+<section id="add" class="hidden">
+<h2 id="formHeading">New service record</h2>
+<form id="serviceForm">
+<input type="hidden" id="editId">
+<div class="formgrid">
+<div><label for="date">Service date *</label><input id="date" type="date" required></div>
+<div><label for="customer">Customer name *</label><input id="customer" required placeholder="Customer name"></div>
+<div><label for="phone">Phone number</label><input id="phone" type="tel" placeholder="e.g. 7XXXXXX"></div>
+<div><label for="vehicleType">Vehicle type *</label><select id="vehicleType" required><option>Motorcycle</option><option>Scooter</option><option>Pickup</option><option>Car</option><option>Van</option><option>Truck</option><option>Boat / outboard</option><option>Other</option></select></div>
+<div><label for="makeModel">Make / model *</label><input id="makeModel" required placeholder="e.g. Suzuki GN125H"></div>
+<div><label for="registration">Registration number</label><input id="registration" placeholder="e.g. A1234"></div>
+<div><label for="odometer">Odometer / mileage</label><input id="odometer" placeholder="e.g. 25000 km"></div>
+<div><label for="complaint">Customer complaint</label><textarea id="complaint" placeholder="What problem did the customer report?"></textarea></div>
+<div><label for="diagnosis">Diagnosis / issue found</label><textarea id="diagnosis" placeholder="What did you find?"></textarea></div>
+<div><label for="work">Work performed / fix</label><textarea id="work" placeholder="What repair or service did you do?"></textarea></div>
+<div><label for="parts">Parts used / replaced</label><textarea id="parts" placeholder="Part names and quantities"></textarea></div>
+<div><label for="labour">Labour charge (MVR)</label><input id="labour" type="number" min="0" step="0.01" value="0" inputmode="decimal"></div>
+<div><label for="partsCost">Parts charge (MVR)</label><input id="partsCost" type="number" min="0" step="0.01" value="0" inputmode="decimal"></div>
+<div><label for="payment">Payment status</label><select id="payment"><option value="Paid">Paid</option><option value="Unpaid">Unpaid</option><option value="Part-paid">Part-paid</option></select></div>
+<div><label for="paidAmount">Amount received (MVR)</label><input id="paidAmount" type="number" min="0" step="0.01" value="0" inputmode="decimal"></div>
+<div class="wide"><label for="notes">Extra notes</label><textarea id="notes" placeholder="Anything else worth remembering"></textarea></div>
+</div>
+<div class="card" style="margin-top:15px"><div class="muted">Total charge</div><div class="stat accent" id="totalPreview">MVR 0.00</div><div class="muted" id="balancePreview">Balance due: MVR 0.00</div></div>
+<div class="actions"><button type="submit">Save service</button><button type="button" class="secondary" onclick="resetForm();show('home')">Cancel</button></div>
+</form>
+</section>
+
+<section id="history" class="hidden">
+<h2>Service history</h2>
+<input id="search" placeholder="Search customer, phone, vehicle or registration..." oninput="renderHistory()">
+<div class="actions"><select id="filterPayment" onchange="renderHistory()" style="max-width:160px"><option value="">All payments</option><option>Paid</option><option>Unpaid</option><option>Part-paid</option></select><select id="filterType" onchange="renderHistory()" style="max-width:160px"><option value="">All vehicles</option><option>Motorcycle</option><option>Scooter</option><option>Pickup</option><option>Car</option><option>Van</option><option>Truck</option><option>Boat / outboard</option><option>Other</option></select></div>
+<div id="historyList" style="margin-top:12px"></div>
+</section>
+
+<section id="customers" class="hidden">
+<h2>Customers</h2><input id="customerSearch" placeholder="Search customer or phone..." oninput="renderCustomers()">
+<div id="customerList" style="margin-top:12px"></div>
+</section>
+
+<section id="reports" class="hidden">
+<h2>Income reports</h2>
+<div class="card"><label for="monthPick">Select month</label><input type="month" id="monthPick" onchange="renderReports()"><hr><div class="muted">Jobs this month</div><div class="stat" id="monthJobs">0</div><div class="muted" style="margin-top:12px">Total charges</div><div class="stat accent" id="monthTotal">MVR 0</div><div class="muted" style="margin-top:12px">Amount received</div><div class="stat" id="monthPaid">MVR 0</div><div class="muted" style="margin-top:12px">Still due</div><div class="stat" id="monthDue">MVR 0</div></div>
+<div class="card"><h3>All-time summary</h3><div id="allSummary" class="muted"></div></div>
+<div class="card"><h3>Backup and restore</h3><p class="muted">Keep a backup somewhere safe. A backup file is a copy of your records, not an online sync.</p><div class="actions"><button onclick="backup()">Export JSON backup</button><button class="secondary" onclick="document.getElementById('restoreFile').click()">Restore JSON backup</button></div><input id="restoreFile" class="hidden" type="file" accept="application/json,.json" onchange="restoreBackup(event)"></div>
+</section>
+</main>
+<nav>
+<button class="active" data-page="home" onclick="show('home')"><span>⌂</span>Home</button>
+<button data-page="add" onclick="newRecord()"><span>＋</span>Add</button>
+<button data-page="history" onclick="show('history')"><span>▤</span>History</button>
+<button data-page="customers" onclick="show('customers')"><span>♙</span>Customers</button>
+<button data-page="reports" onclick="show('reports')"><span>▥</span>Reports</button>
+</nav>
+<div id="toast"></div>
+<script>
+const DB_NAME='MechanicLogbookDB', STORE='services';let db,records=[];
+const $=id=>document.getElementById(id);
+const money=n=>'MVR '+Number(n||0).toLocaleString('en-MV',{minimumFractionDigits:2,maximumFractionDigits:2});
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'id'});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+function tx(mode,fn){return new Promise((resolve,reject)=>{const t=db.transaction(STORE,mode),s=t.objectStore(STORE);let result;try{result=fn(s)}catch(e){reject(e);return}t.oncomplete=()=>resolve(result);t.onerror=()=>reject(t.error);});}
+async function load(){records=await new Promise((resolve,reject)=>{const r=db.transaction(STORE).objectStore(STORE).getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error)});records.sort((a,b)=>b.date.localeCompare(a.date)||b.created-b.created);renderAll();}
+function toast(msg){$('toast').textContent=msg;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',2200)}
+function show(page){document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));$(page).classList.remove('hidden');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));if(page==='home')renderHome();if(page==='history')renderHistory();if(page==='customers')renderCustomers();if(page==='reports')renderReports();window.scrollTo(0,0)}
+function newRecord(){resetForm();show('add')}
+function resetForm(){ $('serviceForm').reset();$('editId').value='';$('formHeading').textContent='New service record';$('date').value=new Date().toISOString().slice(0,10);$('labour').value='0';$('partsCost').value='0';$('paidAmount').value='0';updateTotal();}
+function value(id){return $(id).value.trim()}
+function total(){return Number($('labour').value||0)+Number($('partsCost').value||0)}
+function updateTotal(){const t=total(),p=Number($('paidAmount').value||0);$('totalPreview').textContent=money(t);$('balancePreview').textContent='Balance due: '+money(Math.max(0,t-p));}
+['labour','partsCost','paidAmount'].forEach(id=>$(id).addEventListener('input',updateTotal));
+$('payment').addEventListener('change',()=>{if($('payment').value==='Paid')$('paidAmount').value=total().toFixed(2);else if($('payment').value==='Unpaid')$('paidAmount').value='0';updateTotal()});
+$('serviceForm').addEventListener('submit',async e=>{e.preventDefault();const t=total(),p=Math.min(t,Math.max(0,Number(value('paidAmount')||0)));const rec={id:value('editId')||crypto.randomUUID(),created:Date.now(),date:value('date'),customer:value('customer'),phone:value('phone'),vehicleType:value('vehicleType'),makeModel:value('makeModel'),registration:value('registration'),odometer:value('odometer'),complaint:value('complaint'),diagnosis:value('diagnosis'),work:value('work'),parts:value('parts'),labour:Number(value('labour')||0),partsCost:Number(value('partsCost')||0),total:t,paid:p,payment:p>=t?'Paid':p>0?'Part-paid':'Unpaid',notes:value('notes')};if(!rec.date||!rec.customer||!rec.makeModel){toast('Please complete required fields');return;}await tx('readwrite',s=>s.put(rec));await load();resetForm();show('home');toast('Service record saved');});
+function editRecord(id){const r=records.find(x=>x.id===id);if(!r)return;show('add');$('formHeading').textContent='Edit service record';$('editId').value=r.id;for(const k of ['date','customer','phone','vehicleType','makeModel','registration','odometer','complaint','diagnosis','work','parts','labour','partsCost','notes'])$(k).value=r[k]??'';$('payment').value=r.payment;$('paidAmount').value=r.paid;updateTotal();}
+async function deleteRecord(id){if(!confirm('Delete this service record? This cannot be undone unless you have a backup.'))return;await tx('readwrite',s=>s.delete(id));await load();toast('Record deleted');}
+function recordCard(r){return `<div class="card"><div class="record-title">${esc(r.makeModel)} · ${esc(r.vehicleType)}</div><div class="record-meta">${esc(r.date)} · ${esc(r.customer)} ${r.registration?'· '+esc(r.registration):''}</div><div>${r.complaint?'<b>Complaint:</b> '+esc(r.complaint)+'<br>':''}${r.diagnosis?'<b>Diagnosis:</b> '+esc(r.diagnosis)+'<br>':''}${r.work?'<b>Fix:</b> '+esc(r.work):''}</div><hr><div class="row"><div><div class="muted">Total charge</div><div class="money">${money(r.total)}</div></div><div><div class="muted">Payment</div><span class="pill ${r.payment==='Paid'?'':'unpaid'}">${esc(r.payment)}</span><div class="muted">Due: ${money(r.total-r.paid)}</div></div></div><div class="actions"><button class="secondary small" onclick="editRecord('${r.id}')">Edit</button><button class="danger small" onclick="deleteRecord('${r.id}')">Delete</button></div></div>`}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderHome(){$('statJobs').textContent=records.length;$('statIncome').textContent=money(records.reduce((a,r)=>a+r.paid,0));$('statUnpaid').textContent=money(records.reduce((a,r)=>a+r.total-r.paid,0));$('statCustomers').textContent=new Set(records.map(r=>(r.phone||r.customer).toLowerCase())).size;$('recent').innerHTML=records.length?records.slice(0,3).map(recordCard).join(''):'<div class="empty">No services recorded yet. Tap Add to create your first record.</div>'}
+function renderHistory(){const q=value('search').toLowerCase(),pay=$('filterPayment').value,type=$('filterType').value;const list=records.filter(r=>(!pay||r.payment===pay)&&(!type||r.vehicleType===type)&&[r.customer,r.phone,r.makeModel,r.registration,r.complaint,r.diagnosis].join(' ').toLowerCase().includes(q));$('historyList').innerHTML=list.length?list.map(recordCard).join(''):'<div class="empty">No matching service records.</div>'}
+function renderCustomers(){const q=value('customerSearch').toLowerCase(),map=new Map();records.forEach(r=>{const k=(r.phone||r.customer).toLowerCase();if(!map.has(k))map.set(k,{name:r.customer,phone:r.phone,jobs:[],total:0});const c=map.get(k);c.jobs.push(r);c.total+=r.total});const arr=[...map.values()].filter(c=>(c.name+' '+c.phone).toLowerCase().includes(q));$('customerList').innerHTML=arr.length?arr.map(c=>`<div class="card"><b>${esc(c.name)}</b><div class="record-meta">${esc(c.phone||'No phone number')} · ${c.jobs.length} job(s)</div><div class="money">Total billed: ${money(c.total)}</div><hr>${c.jobs.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`<div class="record-meta">${esc(r.date)} · ${esc(r.makeModel)} · ${money(r.total)}</div>`).join('')}</div>`).join(''):'<div class="empty">No customers found.</div>'}
+function renderReports(){const m=$('monthPick').value||new Date().toISOString().slice(0,7);$('monthPick').value=m;const a=records.filter(r=>r.date.startsWith(m));$('monthJobs').textContent=a.length;$('monthTotal').textContent=money(a.reduce((s,r)=>s+r.total,0));$('monthPaid').textContent=money(a.reduce((s,r)=>s+r.paid,0));$('monthDue').textContent=money(a.reduce((s,r)=>s+r.total-r.paid,0));$('allSummary').innerHTML=`All-time jobs: <b>${records.length}</b><br>Total billed: <b>${money(records.reduce((s,r)=>s+r.total,0))}</b><br>Received: <b>${money(records.reduce((s,r)=>s+r.paid,0))}</b><br>Outstanding: <b>${money(records.reduce((s,r)=>s+r.total-r.paid,0))}</b>`}
+function renderAll(){renderHome();renderHistory();renderCustomers();renderReports()}
+function backup(){const blob=new Blob([JSON.stringify({app:'Mechanic Logbook',version:1,exported:new Date().toISOString(),records},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='mechanic-logbook-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);toast('Backup exported')}
+async function restoreBackup(e){const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data.records))throw Error('Invalid backup');if(!confirm(`Import ${data.records.length} records? Records with matching IDs will be replaced; other records remain.`))return;await tx('readwrite',s=>data.records.forEach(r=>{if(r.id)s.put(r)}));await load();toast('Backup restored');}catch(err){alert('Could not restore this file. Please select a valid Mechanic Logbook backup.')}e.target.value=''}
+(async()=>{try{db=await openDB();await load();resetForm()}catch(e){alert('Storage could not be opened in this browser. Try opening the app in Chrome.')}})();
+</script>
+</body>
+</html>
